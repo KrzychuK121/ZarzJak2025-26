@@ -21,14 +21,17 @@ public class AccountManager {
     DAO dao;
     BankHistory history;
     AuthenticationManager auth;
-    InterestOperator interestOperator;
+    private InterestOperator interestOperator;
     User loggedUser=null;
 
     public boolean paymentIn(User user, double ammount, String description, int accountId) throws SQLException {
         Account account = dao.findAccountById(accountId);
         Operation operation = new PaymentIn(user, ammount,description, account);
         boolean success = account.income(ammount);
-        success = dao.updateAccountState(account);
+        if (success)
+            {
+                success = dao.updateAccountState(account);
+            }
         history.logOperation(operation, success);
         return success;
     }
