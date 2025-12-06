@@ -59,7 +59,6 @@ class CurrencyExchangeTest {
         assertThrows(CurrencyExchangeIsNotInitialized.class,
                 () -> target.exchange("yen","eur", 100));
     }
-
     //Wymiana 0 euro na zł ?
     @Test
     void exchangeZeroValue() throws Exception {
