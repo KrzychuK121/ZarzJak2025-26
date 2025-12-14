@@ -3,6 +3,7 @@ package biz;
 import db.dao.DAO;
 import model.Account;
 import model.User;
+import model.exceptions.OperationIsNotAllowedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -83,6 +84,66 @@ class AccountManagerTest {
     }
 
     // Test co jeżli daoMock zwróci wyjątek
-    // test co jest updateAccount zwróci fałsz
+    @Test
+    void daoMockThrowsException() throws SQLException {
+        User user = new User();
+        user.setId(12);
+        user.setName("Eleonora");
+        Account acc = new Account();
+        acc.setId(1);
+        acc.setOwner(user);
+        acc.setAmmount(1234.5);
+        when(daoMock.findAccountById(anyInt())).thenThrow(SQLException.class);
+        verify(daoMock, never()).updateAccountState(any());
+        assertThrows(
+            SQLException.class,
+            () -> target.paymentIn(user,100," ",1)
+        );
+    }
+
+    // Test co jest updateAccount zwróci fałsz
+    @Test
+    void updateAccountReturnsFalse() throws SQLException {
+        User user = new User();
+        user.setId(12);
+        user.setName("Eleonora");
+        when(daoMock.findUserByName("Eleonora")).thenReturn(user);
+        Account acc = new Account();
+        acc.setId(1);
+        acc.setOwner(user);
+        acc.setAmmount(1234.5);
+        when(daoMock.findAccountById(1)).thenReturn(acc);
+        when(daoMock.updateAccountState(any())).thenReturn(false);
+        double ammountBefore = acc.getAmmount();
+        boolean sucess = target.paymentIn(user,100," ",1);
+
+        assertFalse(sucess);
+        assertEquals(ammountBefore, acc.getAmmount(), "Ammount should not be changed.");
+    }
+
     // Wypłata kwoty większej niz jest na koncie
+    @Test
+    void paymentOutMoreThanOnAccount() throws SQLException, OperationIsNotAllowedException {
+        User user = new User();
+        user.setId(12);
+        user.setName("Eleonora");
+
+        when(daoMock.findUserByName("Eleonora")).thenReturn(user);
+        Account acc = new Account();
+        acc.setId(1);
+        acc.setOwner(user);
+        acc.setAmmount(1234.5);
+
+        when(daoMock.findAccountById(1)).thenReturn(acc);
+        when(daoMock.updateAccountState(any())).thenReturn(true);
+        when(authMock.canInvokeOperation(any(), any())).thenReturn(true);
+
+        double ammountBefore = acc.getAmmount();
+        boolean success = target.paymentOut(user,1334.5," ",1);
+
+        assertFalse(success);
+        assertEquals(ammountBefore, acc.getAmmount(), "Ammount should not be changed.");
+        verify(daoMock, never()).updateAccountState(any());
+    }
+
 }
