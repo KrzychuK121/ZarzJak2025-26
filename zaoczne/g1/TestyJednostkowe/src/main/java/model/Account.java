@@ -10,12 +10,12 @@ public class Account {
 
     public boolean income(double ammount){
         if (ammount<0) return false;
-        this.ammount+=ammount;
+            this.ammount+=ammount;
         return true;
     }
 
     public boolean outcome(double ammount){
-        if (this.ammount<ammount) return false;
+        if (this.ammount<ammount || ammount<0.01) return false;
         this.ammount-=ammount;
         return true;
     }
